@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import AiInsightsPanel from "./components/AiInsightsPanel";
+import {
+  ValidInvalidChart,
+  ErrorsByFieldChart,
+  ErrorTypeChart,
+  ErrorDistributionChart,
+} from "./components/Charts";
 
 // ─── Domain Config ──────────────────────────────────────────────
 const DOMAINS = [
@@ -46,6 +53,8 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("errors");
+  const [aiAnalytics, setAiAnalytics] = useState(null);
+  const [resultsTab, setResultsTab] = useState("insights");
 
   const fileInputRef = useRef(null);
 
@@ -124,6 +133,19 @@ export default function Home() {
 
       setResults(resultsData.data);
       setProcessing(false);
+
+      // Step 4: Fetch AI analytics in background
+      try {
+        const aiRes = await fetch("/api/ai-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ report: resultsData.data }),
+        });
+        const aiData = await aiRes.json();
+        if (aiRes.ok) setAiAnalytics(aiData.analytics);
+      } catch (aiErr) {
+        console.warn("AI analytics fetch failed:", aiErr);
+      }
     } catch (err) {
       setError(err.message);
       setUploading(false);
@@ -140,6 +162,8 @@ export default function Home() {
     setResults(null);
     setError(null);
     setActiveTab("errors");
+    setAiAnalytics(null);
+    setResultsTab("insights");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -269,7 +293,78 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Tabs */}
+            {/* ── Results Sub-navigation ── */}
+            <div className="results-nav">
+              <button
+                className={`results-nav-btn ${resultsTab === "insights" ? "active" : ""}`}
+                onClick={() => setResultsTab("insights")}
+                id="tab-insights"
+              >
+                ✨ AI Insights
+              </button>
+              <button
+                className={`results-nav-btn ${resultsTab === "charts" ? "active" : ""}`}
+                onClick={() => setResultsTab("charts")}
+                id="tab-charts"
+              >
+                📊 Analytics
+              </button>
+              <button
+                className={`results-nav-btn ${resultsTab === "records" ? "active" : ""}`}
+                onClick={() => setResultsTab("records")}
+                id="tab-records"
+              >
+                📋 Records
+              </button>
+            </div>
+
+            {/* ═══ AI INSIGHTS TAB ═══ */}
+            {resultsTab === "insights" && (
+              <AiInsightsPanel report={results} />
+            )}
+
+            {/* ═══ CHARTS TAB ═══ */}
+            {resultsTab === "charts" && (
+              <div className="charts-section">
+                <div className="charts-grid">
+                  <ValidInvalidChart
+                    valid={results.summary.valid}
+                    invalid={results.summary.invalid}
+                  />
+                  {aiAnalytics?.errorsByType &&
+                    Object.keys(aiAnalytics.errorsByType).length > 0 && (
+                      <ErrorTypeChart errorsByType={aiAnalytics.errorsByType} />
+                    )}
+                </div>
+                <div className="charts-grid">
+                  {aiAnalytics?.errorsByField &&
+                    Object.keys(aiAnalytics.errorsByField).length > 0 && (
+                      <ErrorsByFieldChart
+                        errorsByField={aiAnalytics.errorsByField}
+                      />
+                    )}
+                  {aiAnalytics?.errorDistribution &&
+                    aiAnalytics.errorDistribution.length > 0 && (
+                      <ErrorDistributionChart
+                        errorDistribution={aiAnalytics.errorDistribution}
+                      />
+                    )}
+                </div>
+                {!aiAnalytics && (
+                  <div className="charts-loading">
+                    <div className="ai-loading-dots">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <p>Loading analytics data…</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ═══ RECORDS TAB ═══ */}
+            {resultsTab === "records" && (
             <div className="record-tabs-grid">
               <div className="card">
                 <div className="tabs">
@@ -362,6 +457,7 @@ export default function Home() {
                 )}
               </div>
             </div>
+            )}
           </div>
         ) : processing ? (
           /* ══ PROCESSING VIEW ══ */
