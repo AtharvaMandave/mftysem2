@@ -1,9 +1,12 @@
 /**
  * simulateMainframe.js
  * 
- * Integration Layer — Simulates COBOL mainframe batch job processing.
- * Reads an uploaded dataset, applies domain-specific validation rules,
- * and writes results to backend/output/report.json.
+ * Integration Layer — Runs compiled COBOL validation when
+ * validate_batch(.exe) is present next to this script; otherwise uses
+ * JavaScript rules that mirror the COBOL checks.
+ * Writes backend/output/report.json.
+ *
+ * Optional: set COBOL_VALIDATE_EXE to the full path of the compiler output.
  * 
  * Usage: node simulateMainframe.js <domain> <inputFile>
  *   domain: BANKING | HEALTHCARE | ECOMMERCE
@@ -12,12 +15,81 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 // ─── CLI Arguments ──────────────────────────────────────────────
 const args = process.argv.slice(2);
 const domain = (args[0] || 'BANKING').toUpperCase();
 const inputFile = args[1] || path.join(__dirname, 'uploads', 'data.csv');
 const outputDir = path.join(__dirname, 'output');
+const reportPath = path.join(outputDir, 'report.json');
+
+// ─── COBOL batch (GnuCOBOL) — if compile output exists, use it ----------
+function resolveCobolExe() {
+  const override = process.env.COBOL_VALIDATE_EXE;
+  if (override && fs.existsSync(override)) return override;
+  const name = process.platform === 'win32' ? 'validate_batch.exe' : 'validate_batch';
+  const candidates = [
+    path.join(__dirname, name),
+    path.join(__dirname, '..', 'mainframe', 'cobol', name),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function runCobolValidator() {
+  const exe = resolveCobolExe();
+  if (!exe) return false;
+  if (!fs.existsSync(inputFile)) return false;
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+  const env = {
+    ...process.env,
+    VALIDATE_DOMAIN: domain,
+    VALIDATE_INPUT: path.resolve(inputFile),
+    VALIDATE_OUTPUT: path.resolve(reportPath),
+  };
+  if (process.platform === 'win32') {
+    const ucrtBin = 'C:/msys64/ucrt64/bin';
+    const configDir = 'C:/msys64/ucrt64/share/gnucobol/config';
+    const copyDir = 'C:/msys64/ucrt64/share/gnucobol/copy';
+    const defaultConf = path.join(configDir, 'default.conf');
+    if (fs.existsSync(ucrtBin)) {
+      const pathKey = Object.keys(env).find(k => k.toUpperCase() === 'PATH') || 'PATH';
+      const currentPath = env[pathKey] || '';
+      if (!currentPath.toLowerCase().includes('c:/msys64/ucrt64/bin')) {
+        env[pathKey] = `${ucrtBin};${currentPath}`;
+      }
+    }
+    if (!env.COB_CONFIG_DIR && fs.existsSync(defaultConf)) {
+      env.COB_CONFIG_DIR = configDir;
+    }
+    if (!env.COB_COPY_DIR && fs.existsSync(copyDir)) {
+      env.COB_COPY_DIR = copyDir;
+    }
+  }
+  const r = spawnSync(exe, [], { encoding: 'utf8', env, maxBuffer: 8 * 1024 * 1024 });
+  if (r.error) {
+    console.error('[COBOL] spawn error:', r.error.message);
+    return false;
+  }
+  if (r.status !== 0) {
+    console.error('[COBOL] exit', r.status);
+    if (r.stderr) console.error(r.stderr);
+    if (r.stdout) console.error(r.stdout);
+    return false;
+  }
+  console.log(`[MAINFRAME] Validation via COBOL: ${exe}`);
+  console.log(`[OUTPUT] ${reportPath}`);
+  process.exit(0);
+}
+
+if (!runCobolValidator()) {
+  console.log('[MAINFRAME] Using JS fallback validator');
+}
 
 // Ensure output directory exists
 if (!fs.existsSync(outputDir)) {
@@ -184,8 +256,7 @@ const report = {
 };
 
 // ─── Write Output ───────────────────────────────────────────────
-const outputPath = path.join(outputDir, 'report.json');
-fs.writeFileSync(outputPath, JSON.stringify(report, null, 2), 'utf-8');
+fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf-8');
 
 console.log('');
 console.log('╔══════════════════════════════════════════╗');
@@ -197,6 +268,6 @@ console.log(`║  Valid:       ${String(validCount).padEnd(26)}║`);
 console.log(`║  Invalid:     ${String(invalidCount).padEnd(26)}║`);
 console.log(`║  Score:       ${(score + '%').padEnd(26)}║`);
 console.log('╚══════════════════════════════════════════╝');
-console.log(`\n[OUTPUT] ${outputPath}`);
+console.log(`\n[OUTPUT] ${reportPath}`);
 
 process.exit(0);

@@ -1,0 +1,41 @@
+{"runId":"      RUN-20260430-164300","domain":"    BANKING","fileName":"    6th sem/MAINFRAME/PROJECT/mftysem2/backend/uploads/20260413_100004_sample_banking.csv","timestamp":"     2026-04-30T16:43:00Z","summary":{"total": 20,"valid":   8,"invalid":   12,"score":   40.00},"validRecords":[
+{"row":3,"data":{"ACCOUNT_NUMBER":"2.32323E+15","NAME":"Jim","AGE":"35","INCOME":"75000","CREDIT_SCORE":"680"}}
+,
+{"row":4,"data":{"ACCOUNT_NUMBER":"X'00012345F'","NAME":"Ken","AGE":"42","INCOME":"95000","CREDIT_SCORE":"720"}}
+,
+{"row":5,"data":{"ACCOUNT_NUMBER":"","NAME":"Ami","AGE":"55","INCOME":"120000","CREDIT_SCORE":"800"}}
+,
+{"row":6,"data":{"ACCOUNT_NUMBER":"","NAME":"Atharva","AGE":"18","INCOME":"25000","CREDIT_SCORE":"600"}}
+,
+{"row":7,"data":{"ACCOUNT_NUMBER":"","NAME":"Mandave","AGE":"25","INCOME":"45000","CREDIT_SCORE":"680"}}
+,
+{"row":8,"data":{"ACCOUNT_NUMBER":"","NAME":"Pratik","AGE":"30","INCOME":"60000","CREDIT_SCORE":"750"}}
+,
+{"row":9,"data":{"ACCOUNT_NUMBER":"","NAME":"Rugved","AGE":"38","INCOME":"85000","CREDIT_SCORE":"790"}}
+,
+{"row":10,"data":{"ACCOUNT_NUMBER":"","NAME":"Yugansh","AGE":"45","INCOME":"110000","CREDIT_SCORE":"820"}}
+],"errorRecords":[
+{"row":2,"data":{"ACCOUNT_NUMBER":"1.21212E+15","NAME":"Jack","AGE":"128","INCOME":"55000","CREDIT_SCORE":"750"},"errors":["AGE out of range (18-65): got 128"]}
+,
+{"row":11,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"22","INCOME":"35000","CREDIT_SCORE":"650"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":12,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"49","INCOME":"105000","CREDIT_SCORE":"710"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":13,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"26","INCOME":"52000","CREDIT_SCORE":"700"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":14,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"33","INCOME":"70000","CREDIT_SCORE":"780"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":15,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"40","INCOME":"90000","CREDIT_SCORE":"760"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":16,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"15","INCOME":"20000","CREDIT_SCORE":"500"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got","AGE out of range (18-65): got 15al: got"]}
+,
+{"row":17,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"60","INCOME":"135000","CREDIT_SCORE":"850"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":18,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"37","INCOME":"72000","CREDIT_SCORE":"720"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":19,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"29","INCOME":"58000","CREDIT_SCORE":"650"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":20,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"44","INCOME":"98000","CREDIT_SCORE":"810"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+,
+{"row":21,"data":{"ACCOUNT_NUMBER":"","NAME":"","AGE":"31","INCOME":"65000","CREDIT_SCORE":"740"},"errors":["NAME is needed","ACCOUNT_NUMBER must be hexadecimal: got"]}
+]}
