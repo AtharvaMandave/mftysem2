@@ -1,4 +1,4 @@
-{"runId":"      RUN-20260430-164300","domain":"    BANKING","fileName":"    6th sem/MAINFRAME/PROJECT/mftysem2/backend/uploads/20260413_100004_sample_banking.csv","timestamp":"     2026-04-30T16:43:00Z","summary":{"total": 20,"valid":   8,"invalid":   12,"score":   40.00},"validRecords":[
+{"runId":"      RUN-20260430-222500","domain":"    BANKING","fileName":"    6th sem/MAINFRAME/PROJECT/mftysem2/backend/uploads/20260413_100004_sample_banking.csv","timestamp":"     2026-04-30T22:25:00Z","summary":{"total": 20,"valid":   8,"invalid":   12,"score":   40.00},"validRecords":[
 {"row":3,"data":{"ACCOUNT_NUMBER":"2.32323E+15","NAME":"Jim","AGE":"35","INCOME":"75000","CREDIT_SCORE":"680"}}
 ,
 {"row":4,"data":{"ACCOUNT_NUMBER":"X'00012345F'","NAME":"Ken","AGE":"42","INCOME":"95000","CREDIT_SCORE":"720"}}
