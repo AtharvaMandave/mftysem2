@@ -258,16 +258,30 @@ const report = {
 // ─── Write Output ───────────────────────────────────────────────
 fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf-8');
 
-console.log('');
-console.log('╔══════════════════════════════════════════╗');
-console.log('║     MAINFRAME BATCH JOB COMPLETE         ║');
-console.log('╠══════════════════════════════════════════╣');
-console.log(`║  Domain:      ${domain.padEnd(26)}║`);
-console.log(`║  Total:       ${String(total).padEnd(26)}║`);
-console.log(`║  Valid:       ${String(validCount).padEnd(26)}║`);
-console.log(`║  Invalid:     ${String(invalidCount).padEnd(26)}║`);
-console.log(`║  Score:       ${(score + '%').padEnd(26)}║`);
-console.log('╚══════════════════════════════════════════╝');
-console.log(`\n[OUTPUT] ${reportPath}`);
+(async () => {
+  try {
+    // Try to save to DB2
+    const db = require('./db');
+    const runId = await db.saveValidationRun(domain, path.basename(inputFile), total, validCount, invalidCount, score);
+    await db.saveValidRecords(runId, validRecords);
+    await db.saveErrorRecords(runId, errorRecords);
+    console.log(`[DB2] Successfully saved run ID ${runId} to database.`);
+  } catch (err) {
+    console.error(`[DB2 WARN] Could not save to database:`, err.message);
+    // Ignore error and continue normal execution
+  }
 
-process.exit(0);
+  console.log('');
+  console.log('╔══════════════════════════════════════════╗');
+  console.log('║     MAINFRAME BATCH JOB COMPLETE         ║');
+  console.log('╠══════════════════════════════════════════╣');
+  console.log(`║  Domain:      ${domain.padEnd(26)}║`);
+  console.log(`║  Total:       ${String(total).padEnd(26)}║`);
+  console.log(`║  Valid:       ${String(validCount).padEnd(26)}║`);
+  console.log(`║  Invalid:     ${String(invalidCount).padEnd(26)}║`);
+  console.log(`║  Score:       ${(score + '%').padEnd(26)}║`);
+  console.log('╚══════════════════════════════════════════╝');
+  console.log(`\n[OUTPUT] ${reportPath}`);
+
+  process.exit(0);
+})();

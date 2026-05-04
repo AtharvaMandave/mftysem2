@@ -1,0 +1,57 @@
+ID,Date,Description,Category,Type,Amount
+55,2026-04-08,"Coffee Shop",Dining,Expense,18.60
+54,2026-04-06,"Internet Bill",Utilities,Expense,49.00
+53,2026-04-04,"Grocery Store",Groceries,Expense,79.30
+52,2026-04-02,"Apartment Rent",Rent,Expense,1200.00
+1775055254154,2026-04-01,"groc",Shopping,Expense,56.00
+51,2026-04-01,"Monthly Salary",Income,Income,4200.00
+50,2026-03-28,"Taxi Ride",Transport,Expense,27.80
+49,2026-03-25,"Clothing Store",Shopping,Expense,155.60
+48,2026-03-22,"Freelance Project",Freelance,Income,1100.00
+47,2026-03-19,"Restaurant Lunch",Dining,Expense,42.30
+46,2026-03-16,"Concert Tickets",Entertainment,Expense,89.00
+45,2026-03-13,"Electric Bill",Utilities,Expense,58.40
+44,2026-03-10,"Gym Membership",Healthcare,Expense,45.00
+43,2026-03-07,"Grocery Store",Groceries,Expense,68.90
+42,2026-03-03,"Apartment Rent",Rent,Expense,1200.00
+41,2026-03-02,"Monthly Salary",Income,Income,4200.00
+40,2026-02-27,"Pharmacy",Healthcare,Expense,22.80
+39,2026-02-25,"Metro Card Top-up",Transport,Expense,40.00
+38,2026-02-21,"Freelance Project",Freelance,Income,950.00
+37,2026-02-18,"Movie Tickets",Entertainment,Expense,32.00
+36,2026-02-14,"Flower Shop",Shopping,Expense,60.00
+35,2026-02-11,"Internet Bill",Utilities,Expense,49.00
+34,2026-02-08,"Valentine Dinner",Dining,Expense,145.00
+33,2026-02-05,"Grocery Store",Groceries,Expense,91.60
+32,2026-02-03,"Apartment Rent",Rent,Expense,1200.00
+31,2026-02-02,"Monthly Salary",Income,Income,4200.00
+30,2026-01-28,"Netflix Subscription",Entertainment,Expense,15.99
+29,2026-01-24,"Amazon Order",Shopping,Expense,89.99
+28,2026-01-20,"Freelance Project",Freelance,Income,650.00
+27,2026-01-18,"Coffee Shop",Dining,Expense,28.50
+26,2026-01-15,"Uber Ride",Transport,Expense,18.90
+25,2026-01-12,"Electric Bill",Utilities,Expense,70.30
+24,2026-01-09,"Gym Membership",Healthcare,Expense,45.00
+23,2026-01-06,"Grocery Store",Groceries,Expense,73.20
+22,2026-01-03,"Apartment Rent",Rent,Expense,1200.00
+21,2026-01-02,"Monthly Salary",Income,Income,4200.00
+20,2025-12-30,"Doctor Visit",Healthcare,Expense,75.00
+19,2025-12-26,"Freelance Bonus",Freelance,Income,1200.00
+18,2025-12-22,"Bus Pass",Transport,Expense,35.00
+17,2025-12-19,"Restaurant Dinner",Dining,Expense,78.40
+16,2025-12-15,"Holiday Shopping",Shopping,Expense,320.75
+15,2025-12-10,"Internet Bill",Utilities,Expense,49.00
+14,2025-12-08,"Spotify Premium",Entertainment,Expense,9.99
+13,2025-12-05,"Grocery Store",Groceries,Expense,95.10
+12,2025-12-02,"Apartment Rent",Rent,Expense,1200.00
+11,2025-12-01,"Monthly Salary",Income,Income,4200.00
+10,2025-11-28,"Online Shopping",Shopping,Expense,112.30
+9,2025-11-25,"Pharmacy",Healthcare,Expense,38.60
+8,2025-11-22,"Freelance Project",Freelance,Income,850.00
+7,2025-11-17,"Restaurant Dinner",Dining,Expense,54.80
+6,2025-11-14,"Uber Ride",Transport,Expense,22.50
+5,2025-11-11,"Electric Bill",Utilities,Expense,63.20
+4,2025-11-09,"Netflix Subscription",Entertainment,Expense,15.99
+3,2025-11-06,"Grocery Store",Groceries,Expense,87.45
+2,2025-11-04,"Apartment Rent",Rent,Expense,1200.00
+1,2025-11-03,"Monthly Salary",Income,Income,4200.00
