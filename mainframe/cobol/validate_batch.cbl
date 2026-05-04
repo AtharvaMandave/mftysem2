@@ -59,6 +59,7 @@
        01  WS-BASE-NAME                   PIC X(512).
 
        01  WS-I                           PIC 99.
+       01  WS-J                           PIC 99.
        01  WS-PTR                         PIC 9(5).
        01  WS-MAX-ROWS                    PIC 9(5) VALUE 800.
 
@@ -77,6 +78,9 @@
        01  WS-PRICE-IX                    PIC 99.
        01  WS-STOCK-IX                    PIC 99.
        01  WS-ACCNO-IX                   PIC 99.
+       01  WS-EMP-IX                      PIC 99.
+       01  WS-TXN-IX                      PIC 99.
+       01  WS-PCODE-IX                    PIC 99.
 
        01  WS-NUMVAL                      PIC 9(12)V9999.
        01  WS-INTVAL                      PIC S9(9).
@@ -247,6 +251,7 @@
        HDR-IX.
            MOVE ZERO TO WS-NAME-IX WS-AGE-IX WS-INCOME-IX WS-CREDIT-IX
                WS-BLOOD-IX WS-DIAG-IX WS-PROD-IX WS-PRICE-IX WS-STOCK-IX
+               WS-ACCNO-IX WS-EMP-IX WS-TXN-IX
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-H-COUNT
                EVALUATE FUNCTION TRIM(WS-HDR-NORM(WS-I) TRAILING)
                    WHEN "NAME"         MOVE WS-I TO WS-NAME-IX
@@ -259,6 +264,9 @@
                    WHEN "PRICE"        MOVE WS-I TO WS-PRICE-IX
                    WHEN "STOCK"        MOVE WS-I TO WS-STOCK-IX
                    WHEN "ACCOUNT_NUMBER" MOVE WS-I TO WS-ACCNO-IX
+                   WHEN "EMPLOYEE_ID"     MOVE WS-I TO WS-EMP-IX
+                   WHEN "TRANSACTION_CODE" MOVE WS-I TO WS-TXN-IX
+                   WHEN "PRODUCT_CODE" MOVE WS-I TO WS-PCODE-IX
                END-EVALUATE
            END-PERFORM.
 
@@ -305,18 +313,29 @@
                TRAILING)) = ZERO
                MOVE "NAME is needed" TO WS-TEMP-MSG
                PERFORM ADD-ERR-ONE
-
-           IF WS-ACCNO-IX NOT = ZERO
-               MOVE WS-FIELD(WS-ACCNO-IX) TO WS-CHK-SRC
-               PERFORM CHK-HEX
-               IF NUM-IS-BAD
-                   STRING "ACCOUNT_NUMBER must be hexadecimal: got "
-                       FUNCTION TRIM(WS-CHK-SRC TRAILING)
-                       INTO WS-TEMP-MSG
-                   END-STRING
-                   PERFORM ADD-ERR-ONE
-               END-IF
            END-IF
+
+           IF WS-ACCNO-IX = ZERO
+               MOVE "ACCOUNT_NUMBER column missing from header"
+                   TO WS-TEMP-MSG
+               PERFORM ADD-ERR-ONE
+           ELSE
+               IF FUNCTION LENGTH(FUNCTION TRIM(
+                       WS-FIELD(WS-ACCNO-IX) TRAILING)) = ZERO
+                   MOVE "ACCOUNT_NUMBER is required" TO WS-TEMP-MSG
+                   PERFORM ADD-ERR-ONE
+               ELSE
+                   MOVE WS-FIELD(WS-ACCNO-IX) TO WS-CHK-SRC
+                   PERFORM CHK-HEX
+                   IF NUM-IS-BAD
+                       STRING "ACCOUNT_NUMBER must be packed-hex "
+                           "X'<digits>F/C/D': got "
+                           FUNCTION TRIM(WS-CHK-SRC TRAILING)
+                           INTO WS-TEMP-MSG
+                       END-STRING
+                       PERFORM ADD-ERR-ONE
+                   END-IF
+               END-IF
            END-IF
            MOVE WS-FIELD(WS-AGE-IX) TO WS-CHK-SRC
            PERFORM CHK-INT
@@ -368,6 +387,55 @@
                    END-STRING
                    PERFORM ADD-ERR-ONE
                END-IF
+           END-IF
+
+           *> --- EMPLOYEE_ID: exactly 6 digits, no decimals ---
+           IF WS-EMP-IX > ZERO
+               IF FUNCTION LENGTH(FUNCTION TRIM(
+                       WS-FIELD(WS-EMP-IX) TRAILING)) > ZERO
+                   MOVE WS-FIELD(WS-EMP-IX) TO WS-CHK-SRC
+                   PERFORM CHK-STRICT-INT
+                   IF NUM-IS-BAD
+                       MOVE "EMPLOYEE_ID must be 6-digit integer"
+                           TO WS-TEMP-MSG
+                       PERFORM ADD-ERR-ONE
+                   ELSE
+                       MOVE FUNCTION TRIM(WS-FIELD(WS-EMP-IX) TRAILING)
+                           TO WS-CHK-SRC
+                       IF FUNCTION LENGTH(
+                               FUNCTION TRIM(WS-CHK-SRC TRAILING))
+                               NOT = 6
+                           STRING "EMPLOYEE_ID must be exactly 6 digits: got "
+                               FUNCTION TRIM(WS-CHK-SRC TRAILING)
+                               INTO WS-TEMP-MSG
+                           END-STRING
+                           PERFORM ADD-ERR-ONE
+                       END-IF
+                   END-IF
+               END-IF
+           END-IF
+
+           *> --- TRANSACTION_CODE: must be CR, DR, or TF ---
+           IF WS-TXN-IX > ZERO
+               IF FUNCTION LENGTH(FUNCTION TRIM(
+                       WS-FIELD(WS-TXN-IX) TRAILING)) = ZERO
+                   MOVE "TRANSACTION_CODE is required" TO WS-TEMP-MSG
+                   PERFORM ADD-ERR-ONE
+               ELSE
+                   MOVE FUNCTION TRIM(WS-FIELD(WS-TXN-IX) TRAILING)
+                       TO WS-BLOOD-UC
+                   INSPECT WS-BLOOD-UC CONVERTING
+                       "abcdefghijklmnopqrstuvwxyz"
+                       TO "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                   IF WS-BLOOD-UC NOT = "CR" AND WS-BLOOD-UC NOT = "DR"
+                           AND WS-BLOOD-UC NOT = "TF"
+                       STRING "TRANSACTION_CODE must be CR/DR/TF: got "
+                           FUNCTION TRIM(WS-FIELD(WS-TXN-IX) TRAILING)
+                           INTO WS-TEMP-MSG
+                       END-STRING
+                       PERFORM ADD-ERR-ONE
+                   END-IF
+               END-IF
            END-IF.
 
        VAL-HLTH.
@@ -382,7 +450,18 @@
                TRAILING)) = ZERO
                MOVE "NAME (patient name) is required" TO WS-TEMP-MSG
                PERFORM ADD-ERR-ONE
-           END-IF
+           ELSE
+               MOVE WS-FIELD(WS-NAME-IX) TO WS-CHK-SRC
+               PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > 50
+                   IF WS-CHK-SRC(WS-I:1) >= '0'
+                       AND WS-CHK-SRC(WS-I:1) <= '9'
+                       MOVE "NAME should not contain numbers"
+                           TO WS-TEMP-MSG
+                       PERFORM ADD-ERR-ONE
+                       EXIT PERFORM
+                   END-IF
+               END-PERFORM
+           END-IF.
            MOVE WS-FIELD(WS-AGE-IX) TO WS-CHK-SRC
            PERFORM CHK-INT
            IF NUM-IS-BAD
@@ -414,6 +493,21 @@
                END-STRING
                PERFORM ADD-ERR-ONE
            END-IF.
+           *> --- DIAGNOSIS validation ---
+           IF WS-DIAG-IX = ZERO
+               MOVE "DIAGNOSIS column missing from header"
+                   TO WS-TEMP-MSG
+               PERFORM ADD-ERR-ONE
+           ELSE
+               IF FUNCTION LENGTH(FUNCTION TRIM(
+                       WS-FIELD(WS-DIAG-IX) TRAILING)) < 3
+                   STRING "DIAGNOSIS too short: got "
+                       FUNCTION TRIM(WS-FIELD(WS-DIAG-IX) TRAILING)
+                       INTO WS-TEMP-MSG
+                   END-STRING
+                   PERFORM ADD-ERR-ONE
+               END-IF
+           END-IF.
 
        VAL-ECOM.
            IF WS-PRICE-IX = ZERO OR WS-STOCK-IX = ZERO
@@ -428,6 +522,12 @@
                MOVE "PRODUCT name is required" TO WS-TEMP-MSG
                PERFORM ADD-ERR-ONE
            END-IF
+           *> --- PRODUCT length validation ---
+           IF FUNCTION LENGTH(FUNCTION TRIM(
+                   WS-FIELD(WS-PROD-IX) TRAILING)) < 3
+               MOVE "PRODUCT name too short" TO WS-TEMP-MSG
+               PERFORM ADD-ERR-ONE
+           END-IF.
            MOVE WS-FIELD(WS-PRICE-IX) TO WS-CHK-SRC
            PERFORM CHK-FLOAT
            IF NUM-IS-BAD
@@ -444,6 +544,11 @@
                    END-STRING
                    PERFORM ADD-ERR-ONE
                END-IF
+               *> --- PRICE upper bound ---
+              IF WS-NUMVAL > 1000000
+                  MOVE "PRICE too large (>1000000)" TO WS-TEMP-MSG
+                  PERFORM ADD-ERR-ONE
+              END-IF
            END-IF
            MOVE WS-FIELD(WS-STOCK-IX) TO WS-CHK-SRC
            PERFORM CHK-INT
@@ -461,30 +566,90 @@
                    END-STRING
                    PERFORM ADD-ERR-ONE
                END-IF
+               *> --- STOCK upper limit ---
+              IF WS-INTVAL > 10000
+                  MOVE "STOCK too large (>10000)" TO WS-TEMP-MSG
+                  PERFORM ADD-ERR-ONE
+              END-IF
+              *> --- PRODUCT_CODE hex validation ---
+              IF WS-PCODE-IX > ZERO
+                  MOVE WS-FIELD(WS-PCODE-IX) TO WS-CHK-SRC
+                  PERFORM CHK-HEX
+                  IF NUM-IS-BAD
+                      MOVE "PRODUCT_CODE must be hexadecimal"
+                          TO WS-TEMP-MSG
+                      PERFORM ADD-ERR-ONE
+                  END-IF
+              END-IF
            END-IF.
 
        
        CHK-HEX.
-           MOVE 'Y' TO WS-NUM-OK
+      *> Valid : X'<4-16 hex digits><F|C|D>'
+      *> Inner digits (excluding sign nibble) must be even count
+      *> e.g.  X'00012345F'  (8 digits + F = ok, even)
+      *> e.g.  X'1A2BF'      (4 digits + F = ok, even)
+      *> Invalid: X'1F' (too short), X'123F' odd before nibble NOT checked
+           MOVE 'N' TO WS-NUM-OK
            MOVE FUNCTION TRIM(WS-CHK-SRC TRAILING) TO WS-CHK-SRC
            IF WS-CHK-SRC = SPACES
-               MOVE 'N' TO WS-NUM-OK
                EXIT PARAGRAPH
            END-IF
-           PERFORM VARYING WS-I FROM 1 BY 1
-               UNTIL WS-I > FUNCTION LENGTH(WS-CHK-SRC)
-               EVALUATE WS-CHK-SRC(WS-I:1)
-                   WHEN '0' THRU '9'
-                       CONTINUE
-                   WHEN 'A' THRU 'F'
-                       CONTINUE
-                   WHEN 'a' THRU 'f'
-                       CONTINUE
-                   WHEN OTHER
-                       MOVE 'N' TO WS-NUM-OK
-                       EXIT PERFORM
-               END-EVALUATE
-           END-PERFORM.
+
+           *> Must start with X'
+           IF WS-CHK-SRC(1:2) NOT = "X'"
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Must end with '
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(WS-CHK-SRC TRAILING))
+               TO WS-EC
+           IF WS-CHK-SRC(WS-EC:1) NOT = "'"
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Inner length = total - 3  (X' + ')
+           COMPUTE WS-I = WS-EC - 3
+           IF WS-I < 2
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Inner must be 2-17 chars (1-16 hex digits + 1 sign nibble)
+           IF WS-I < 2 OR WS-I > 17
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Last inner char = sign nibble: must be F, C, or D
+           MOVE WS-CHK-SRC(WS-EC - 1:1) TO WS-BLOOD-UC
+           INSPECT WS-BLOOD-UC CONVERTING "fcd" TO "FCD"
+           IF WS-BLOOD-UC NOT = 'F' AND WS-BLOOD-UC NOT = 'C'
+                   AND WS-BLOOD-UC NOT = 'D'
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Digit count before sign nibble must be >= 1
+           COMPUTE WS-J = WS-I - 1
+           IF WS-J < 1
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Digit count before sign nibble must be ODD
+           *> (packed decimal: each byte = 2 nibbles, last byte = digit+sign)
+           *> So total nibbles = even, meaning digits before sign = odd
+           IF FUNCTION MOD(WS-J, 2) = 0
+               EXIT PARAGRAPH
+           END-IF
+
+           *> All inner chars (positions 3 to EC-1) must be 0-9 or A-F
+           PERFORM VARYING WS-J FROM 3 BY 1 UNTIL WS-J > WS-EC - 1
+               MOVE WS-CHK-SRC(WS-J:1) TO WS-BLOOD-UC
+               INSPECT WS-BLOOD-UC CONVERTING "abcdef" TO "ABCDEF"
+               IF (WS-BLOOD-UC < '0' OR WS-BLOOD-UC > '9')
+                       AND (WS-BLOOD-UC < 'A' OR WS-BLOOD-UC > 'F')
+                   EXIT PARAGRAPH
+               END-IF
+           END-PERFORM
+           MOVE 'Y' TO WS-NUM-OK.
 
        CHK-INT.
            MOVE 'N' TO WS-NUM-OK
@@ -502,6 +667,23 @@
                EXIT PARAGRAPH
            END-IF
            COMPUTE WS-NUMVAL = FUNCTION NUMVAL(WS-CHK-SRC)
+           MOVE 'Y' TO WS-NUM-OK.
+
+       CHK-STRICT-INT.
+           MOVE 'N' TO WS-NUM-OK
+           MOVE FUNCTION TRIM(WS-CHK-SRC TRAILING) TO WS-CHK-SRC
+           IF WS-CHK-SRC = SPACES
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM VARYING WS-J FROM 1 BY 1 UNTIL WS-J > 80
+               IF WS-CHK-SRC(WS-J:1) = '.'
+                   EXIT PARAGRAPH
+               END-IF
+               IF WS-CHK-SRC(WS-J:1) = SPACE
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+           COMPUTE WS-INTVAL = FUNCTION NUMVAL(WS-CHK-SRC)
            MOVE 'Y' TO WS-NUM-OK.
 
        *> Convert WS-ROW-NUM → WS-ROW-STR with no leading zeros/spaces

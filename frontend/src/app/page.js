@@ -49,6 +49,7 @@ export default function Home() {
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -66,6 +67,7 @@ export default function Home() {
     if (f) {
       setFile(f);
       setUploaded(false);
+      setUploadedFileName(null);
       setResults(null);
       setError(null);
     }
@@ -88,6 +90,7 @@ export default function Home() {
   const removeFile = () => {
     setFile(null);
     setUploaded(false);
+    setUploadedFileName(null);
     setResults(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -113,6 +116,7 @@ export default function Home() {
       if (!uploadRes.ok) throw new Error(uploadData.error);
 
       setUploaded(true);
+      setUploadedFileName(uploadData.fileName);
       setUploading(false);
 
       // Step 2: Run job
@@ -120,7 +124,7 @@ export default function Home() {
       const jobRes = await fetch("/api/run-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain, fileName: file.name }),
+        body: JSON.stringify({ domain, fileName: uploadData.fileName }),
       });
 
       const jobData = await jobRes.json();
@@ -158,6 +162,7 @@ export default function Home() {
     setDomain(null);
     setFile(null);
     setUploaded(false);
+    setUploadedFileName(null);
     setProcessing(false);
     setResults(null);
     setError(null);
@@ -523,12 +528,12 @@ export default function Home() {
                   <strong>browse</strong>
                 </div>
                 <div className="upload-hint">
-                  Supported: CSV, TXT — Max 10MB
+                  Supported: CSV, XLSX, XLS, TXT — Max 10MB
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".csv,.txt"
+                  accept=".csv,.xlsx,.xls,.txt"
                   className="hidden-input"
                   onChange={(e) => handleFile(e.target.files[0])}
                   id="file-input"

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import * as XLSX from "xlsx";
 
 export async function POST(request) {
   try {
@@ -26,21 +27,36 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    let fileName = file.name;
+    let fileContent = buffer;
+
+    // Check if file is Excel
+    const ext = path.extname(fileName).toLowerCase();
+    if (ext === '.xlsx' || ext === '.xls') {
+      // Parse Excel and convert to CSV
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+      fileContent = Buffer.from(csvContent, 'utf8');
+      fileName = fileName.replace(/\.(xlsx|xls)$/i, '.csv');
+    }
+
     // Write to backend/uploads/
     const uploadsDir = path.join(process.cwd(), "..", "backend", "uploads");
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    const filePath = path.join(uploadsDir, file.name);
-    fs.writeFileSync(filePath, buffer);
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, fileContent);
 
     return NextResponse.json({
       success: true,
       message: "File uploaded successfully",
-      fileName: file.name,
+      fileName: fileName,
       domain: domain,
-      size: buffer.length,
+      size: fileContent.length,
       path: filePath,
     });
   } catch (error) {
