@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Link from "next/link";
 import AiInsightsPanel from "./components/AiInsightsPanel";
+import AiFixPanel from "./components/AiFixPanel";
 import {
   ValidInvalidChart,
   ErrorsByFieldChart,
@@ -198,9 +200,14 @@ export default function Home() {
               Data<span>Validator</span>
             </div>
           </div>
-          <div className="header-badge">
-            <span className="dot" />
-            Mainframe Simulation Active
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="header-badge">
+              <span className="dot" />
+              Mainframe Simulation Active
+            </div>
+            <Link href="/dashboard" className="btn btn-outline btn-sm" style={{ textDecoration: "none" }}>
+              📊 Dashboard
+            </Link>
           </div>
         </div>
       </header>
@@ -209,6 +216,9 @@ export default function Home() {
       <main className="main-content">
         {/* Hero */}
         <section className="hero-section">
+          <div className="school-badge">
+            <span className="icon">🎓</span> TY Semester 2 Project
+          </div>
           <h1 className="hero-title">AI Data Validation System</h1>
           <p className="hero-subtitle">
             Multi-domain enterprise data validation with automated mainframe
@@ -262,6 +272,37 @@ export default function Home() {
                 <button className="btn btn-outline" onClick={resetAll}>
                   ↻ New Validation
                 </button>
+                {results.validRecords && results.validRecords.length > 0 && (
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => {
+                      // Build CSV from validRecords
+                      const records = results.validRecords.map(r => r.data);
+                      const headers = Object.keys(records[0]);
+                      const csvLines = [headers.join(",")];
+                      records.forEach(rec => {
+                        const row = headers.map(h => {
+                          const val = rec[h] || "";
+                          if (String(val).includes(",") || String(val).includes('"')) {
+                            return `"${String(val).replace(/"/g, '""')}"`;
+                          }
+                          return val;
+                        });
+                        csvLines.push(row.join(","));
+                      });
+                      const blob = new Blob([csvLines.join("\n")], { type: "text/csv" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `clean_${results.fileName || "data"}`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    id="download-clean-btn"
+                  >
+                    ⬇ Download Clean CSV
+                  </button>
+                )}
               </div>
             </div>
 
@@ -321,6 +362,15 @@ export default function Home() {
               >
                 📋 Records
               </button>
+              {results.errorRecords && results.errorRecords.length > 0 && (
+                <button
+                  className={`results-nav-btn ${resultsTab === "fixes" ? "active" : ""}`}
+                  onClick={() => setResultsTab("fixes")}
+                  id="tab-fixes"
+                >
+                  🔧 AI Fixes
+                </button>
+              )}
             </div>
 
             {/* ═══ AI INSIGHTS TAB ═══ */}
@@ -462,6 +512,11 @@ export default function Home() {
                 )}
               </div>
             </div>
+            )}
+
+            {/* ═══ AI FIXES TAB ═══ */}
+            {resultsTab === "fixes" && results.errorRecords && results.errorRecords.length > 0 && (
+              <AiFixPanel errorRecords={results.errorRecords} domain={results.domain} />
             )}
           </div>
         ) : processing ? (
